@@ -1,0 +1,60 @@
+.window-container {
+  width: 80%;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.window-title {
+  text-align: center;
+  color: #0078d7;
+  font-size: 24px;
+}
+
+.input-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.input-file {
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.submit-button {
+  padding: 8px 16px;
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.image-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  color: #333;
+}
+
+.image-display {
+  max-width: 400px;
+  max-height: 400px;
+  border: 1px solid #0078d7;
+  border-radius: 5px;
+}
