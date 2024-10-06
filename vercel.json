@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/**/*": {
+      "excludeFiles": "node_modules/@next/swc-linux-x64-gnu/**/*"
+    }
+  }
+}
