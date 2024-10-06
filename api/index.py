@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify
-import cv2
 import numpy as np
-import json
-from collections import deque
+from PIL import Image
+from skimage import filters, morphology
+from io import BytesIO
 import base64
+from collections import deque
 
 app = Flask(__name__)
-
 
 def find_islands(image):
     height, width = image.shape[:2]
@@ -20,7 +20,6 @@ def find_islands(image):
                 islands.append(island)
 
     return islands
-
 
 def bfs(binary, start_x, start_y, visited):
     queue = deque([(start_x, start_y)])
@@ -36,15 +35,10 @@ def bfs(binary, start_x, start_y, visited):
 
         for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
             nx, ny = x + dx, y + dy
-            if (
-                0 <= nx < binary.shape[1]
-                and 0 <= ny < binary.shape[0]
-                and binary[ny, nx] == 255
-            ):
+            if (0 <= nx < binary.shape[1] and 0 <= ny < binary.shape[0] and binary[ny, nx] == 255):
                 queue.append((nx, ny))
 
     return island
-
 
 def calculate_distance(p1, p2):
     return max(abs(p1[0] - p2[0]), abs(p1[1] - p2[1]))
@@ -134,8 +128,6 @@ def generate_turtle_commands(islands):
         current_pos = nearest_island[-1]
 
     return commands
-
-
 @app.route("/api/run", methods=["POST"])
 def process_image():
     try:
@@ -143,39 +135,41 @@ def process_image():
         image_base64 = data.get("imageBase64")
 
         image_data = base64.b64decode(image_base64)
-        np_arr = np.frombuffer(image_data, np.uint8)
-        image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        image = Image.open(BytesIO(image_data)).convert('L')
+        np_image = np.array(image)
 
-        # OpenCVの処理
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edges = cv2.Canny(blurred, 50, 150)
-        kernel = np.ones((3, 3), np.uint8)
-        dilated = cv2.dilate(edges, kernel, iterations=0)
+        # 画像処理
+        blurred = filters.gaussian(np_image, sigma=1)
+        edges = filters.sobel(blurred)
+        dilated = morphology.dilation(edges)
+
+        # 二値化
+        binary = (dilated > dilated.mean()).astype(np.uint8) * 255
 
         # Find islands
-        islands = find_islands(dilated)
+        islands = find_islands(binary)
         turtle_commands = generate_turtle_commands(islands)
 
         turtle_json = {
-            "size": [image.shape[1], image.shape[0]],
+            "size": [np_image.shape[1], np_image.shape[0]],
             "commands": turtle_commands,
         }
 
-        # turtle_json = {}
+        # 処理結果の画像をbase64エンコード
+        processed_image = Image.fromarray(binary.astype('uint8'))
+        buffered = BytesIO()
+        processed_image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
 
         response_data = {
             "turtle": turtle_json,
-            "dilatedBase64": base64.b64encode(
-                cv2.imencode(".png", dilated)[1]
-            ).decode(),
+            "dilatedBase64": img_str,
         }
 
         return jsonify(response_data)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5328)

@@ -1,5 +1,6 @@
 Flask
-setuptools>=65.5.0
-opencv-python-headless==4.8.0.74
-opencv-contrib-python-headless==4.8.0.74
+# setuptools>=65.5.0
+# opencv-python-headless==4.8.0.74
+# opencv-contrib-python-headless==4.8.0.74
 numpy
+scikit-image
