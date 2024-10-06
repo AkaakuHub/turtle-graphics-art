@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import numpy as np
 from PIL import Image
+from skimage.morphology import skeletonize
 from skimage import filters, morphology
 from io import BytesIO
 import base64
@@ -145,9 +146,12 @@ def process_image():
 
         # 二値化
         binary = (dilated > dilated.mean()).astype(np.uint8) * 255
+        
+        # スケルトン化
+        skeleton = skeletonize(binary // 255) * 255  # skeletonizeは0-1の配列を受け取るので、255で割る
 
         # Find islands
-        islands = find_islands(binary)
+        islands = find_islands(skeleton)
         turtle_commands = generate_turtle_commands(islands)
 
         turtle_json = {
@@ -156,7 +160,7 @@ def process_image():
         }
 
         # 処理結果の画像をbase64エンコード
-        processed_image = Image.fromarray(binary.astype('uint8'))
+        processed_image = Image.fromarray(skeleton.astype('uint8'))
         buffered = BytesIO()
         processed_image.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
