@@ -1,5 +1,5 @@
 Flask
-setuptools
-opencv-python-headless==4.5.3.56
-opencv-contrib-python-headless==4.5.3.56
+setuptools>=65.5.0
+opencv-python-headless==4.8.0.74
+opencv-contrib-python-headless==4.8.0.74
 numpy
