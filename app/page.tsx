@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, ChangeEvent } from 'react';
-import JsonDisplay from './_components/JsonDisplay';
-import { TurtleJsonType } from './types';
+// import JsonDisplay from './_components/JsonDisplay';
+// import { TurtleJsonType } from './types';
 import './page.css';
 
 interface ApiResponse {
@@ -65,7 +65,7 @@ const ImageProcessingApp: React.FC = () => {
 
   return (
     <div className="window-container">
-      <h1 className="window-title">線画抽出</h1>
+      <h1 className="window-title">線画抽出アプリ</h1>
       <div className="input-section">
         <input
           className="input-file"
@@ -74,19 +74,19 @@ const ImageProcessingApp: React.FC = () => {
           onChange={handleFileChange}
         />
         <button className="submit-button" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Processing...' : '提出'}
+          開始
         </button>
       </div>
-      {loading && <p className="loading-text">Processing...</p>}
+      {loading && <p className="loading-text">処理中...</p>}
       {selectedImage && (
         <div className="image-section">
-          <h2 className="section-title">Selected Image:</h2>
+          <h2 className="section-title">選択した画像:</h2>
           <img className="image-display" src={selectedImage} alt="Selected" />
         </div>
       )}
       {processedImage && (
         <div className="image-section">
-          <h2 className="section-title">Processed Image:</h2>
+          <h2 className="section-title">処理された画像:</h2>
           <img className="image-display" src={processedImage} alt="Processed" />
         </div>
       )}
