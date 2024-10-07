@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, ChangeEvent } from 'react';
-// import JsonDisplay from './_components/JsonDisplay';
-// import { TurtleJsonType } from './types';
 import './page.css';
 
 interface ApiResponse {
@@ -14,8 +12,8 @@ const ImageProcessingApp: React.FC = () => {
   const [fileName, setFileName] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [turtleJson, setTurtleJson] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  // const [turtleJson, setTurtleJson] = useState<TurtleJsonType | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,12 +45,8 @@ const ImageProcessingApp: React.FC = () => {
 
       if (response.ok) {
         const data: ApiResponse = await response.json();
-        const turtleJson = data.turtle;
-        const dilatedBase64 = data.dilatedBase64;
-        // const parsedTurtleJson = JSON.parse(turtleJson);
-        // setTurtleJson(parsedTurtleJson);
-        console.log(turtleJson);
-        setProcessedImage(`data:image/png;base64,${dilatedBase64}`);
+        setTurtleJson(JSON.stringify(data.turtle, null, 0)); // turtle JSONを保存
+        setProcessedImage(`data:image/png;base64,${data.dilatedBase64}`);
       } else {
         console.error('APIエラー:', response.statusText);
       }
@@ -60,6 +54,17 @@ const ImageProcessingApp: React.FC = () => {
       console.error('エラーが発生しました:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (turtleJson) {
+      const blob = new Blob([turtleJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'turtle.json';
+      link.click();
     }
   };
 
@@ -90,14 +95,15 @@ const ImageProcessingApp: React.FC = () => {
           <img className="image-display" src={processedImage} alt="Processed" />
         </div>
       )}
-      {/* {turtleJson && (
-        <div className="turtle-json">
-          <h2 className="section-title">Turtle JSON:</h2>
-          <JsonDisplay data={turtleJson} />
+      {turtleJson && (
+        <div className="download-section">
+          <button className="download-button" onClick={handleDownload}>
+            turtle.jsonをダウンロード
+          </button>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
 
-export default ImageProcessingApp;
+export default ImageProcessingApp;  

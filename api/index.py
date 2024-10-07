@@ -140,6 +140,7 @@ def generate_turtle_commands(islands):
 def process_image():
     try:
         data = request.get_json()
+        file_name = data.get("fileName")
         image_base64 = data.get("imageBase64")
 
         image_data = base64.b64decode(image_base64)
