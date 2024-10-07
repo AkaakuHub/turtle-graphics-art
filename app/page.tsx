@@ -86,7 +86,7 @@ const ImageProcessingApp: React.FC = () => {
 
   return (
     <div className="window-container">
-      <h1 className="window-title">線画抽出アプリ</h1>
+      <h1 className="window-title">線画抽出アプリ&#040;サーバー版&#041;</h1>
       <div className="input-section">
         <input
           className="input-file"
@@ -112,13 +112,13 @@ const ImageProcessingApp: React.FC = () => {
           <img className="image-display" src={processedImage} alt="Processed" />
         </div>
       )}
-      {turtleJson && (
+      {/* {turtleJson && (
         <div className="download-section">
           <button className="download-button" onClick={handleDownload}>
             turtle.jsonをダウンロード
           </button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

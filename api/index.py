@@ -154,16 +154,16 @@ def process_image():
         kernel = np.ones((3, 3), np.uint8)
         dilated = cv2.dilate(edges, kernel, iterations=0)
 
-        # Find islands
-        islands = find_islands(dilated)
-        turtle_commands = generate_turtle_commands(islands)
+        # # Find islands
+        # islands = find_islands(dilated)
+        # turtle_commands = generate_turtle_commands(islands)
 
-        turtle_json = {
-            "size": [image.shape[1], image.shape[0]],
-            "commands": turtle_commands,
-        }
+        # turtle_json = {
+        #     "size": [image.shape[1], image.shape[0]],
+        #     "commands": turtle_commands,
+        # }
 
-        # turtle_json = {}
+        turtle_json = {}
 
         response_data = {
             "turtle": turtle_json,
