@@ -161,9 +161,7 @@ function generateCommands(islands: Island[]): TurtleCommands {
     currentAngle = newAngle;
   }
 
-  return {
-    commands,
-  };
+  return commands;
 }
 
 interface GenerateTurtleCommandsProps {
