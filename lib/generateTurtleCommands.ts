@@ -1,10 +1,7 @@
 type Position = [number, number];
 type Island = Position[];
-type TurtleCommand = 'u' | 'd' | `m${number}` | `r${number}` | `l${number}`;
 
-interface TurtleJson {
-  commands: TurtleCommand[];
-}
+import { TurtleCommand, TurtleCommands, TurtleJsonType } from '../app/types';
 
 function decodeBase64Image(imageBase64: string): Promise<ImageData> {
   return new Promise((resolve, reject) => {
@@ -140,7 +137,7 @@ function generateZigzagCommands(start: Position, end: Position, currentAngle: nu
   return [commands, currentAngle];
 }
 
-function generateCommands(islands: Island[]): TurtleJson {
+function generateCommands(islands: Island[]): TurtleCommands {
   const commands: TurtleCommand[] = [];
   let currentPos: Position = [0, 0];
   let currentAngle = 0;
@@ -173,8 +170,15 @@ interface GenerateTurtleCommandsProps {
   imageBase64: string;
 }
 
-export default async function generateTurtleCommands({ imageBase64 }: GenerateTurtleCommandsProps): Promise<TurtleJson> {
+export default async function generateTurtleCommands({ imageBase64 }: GenerateTurtleCommandsProps): Promise<TurtleJsonType> {
   const imageData = await decodeBase64Image(imageBase64);
   const islands = findIslands(imageData);
-  return generateCommands(islands);
+  const commands = generateCommands(islands);
+  const width = imageData.width;
+  const height = imageData.height;
+  const turtleJson: TurtleJsonType = {
+    "size": [width, height],
+    "data": commands,
+  };
+  return turtleJson;
 }

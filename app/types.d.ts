@@ -1,6 +1,6 @@
-type TurtleCommand = 'u' | 'd' | `m${number}` | `r${number}` | `l${number}`;
+export type TurtleCommand = 'u' | 'd' | `m${number}` | `r${number}` | `l${number}`;
 
-interface TurtleJson {
+export interface TurtleCommands {
   commands: TurtleCommand[];
 }
 

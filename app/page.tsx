@@ -7,7 +7,6 @@ import './page.css';
 import generateTurtleCommands from '@/lib/generateTurtleCommands';
 
 interface ApiResponse {
-  information: [number, number];
   dilatedBase64: string;
 }
 
@@ -20,8 +19,6 @@ const ImageProcessingApp: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [isGeneratingJson, setIsGeneratingJson] = useState<boolean>(false);
-  const [width, setWidth] = useState<number>(0);
-  const [height, setHeight] = useState<number>(0);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -60,11 +57,6 @@ const ImageProcessingApp: React.FC = () => {
 
       if (response.ok) {
         const data: ApiResponse = await response.json();
-        const information = data.information;
-        const width = information[0];
-        const height = information[1];
-        setWidth(width);
-        setHeight(height);
         const dilatedBase64 = data.dilatedBase64;
         setProcessedImage(`data:image/png;base64,${dilatedBase64}`);
       } else {
@@ -97,21 +89,32 @@ const ImageProcessingApp: React.FC = () => {
   };
 
   const handleGenerateTurtleJson = async () => {
-    if (!processedImage) return;
-    setTurtleJson(null);
+    if (!processedImage) {
+      setError('画像が処理されていません');
+      return;
+    }
     setIsGeneratingJson(true);
-    const data = await generateTurtleCommands({ imageBase64: processedImage.split(',')[1] });
-    const turtleJson: TurtleJsonType = {
-      size: [width, height],
-      data,
-    };
-    setTurtleJson(JSON.stringify(turtleJson, null, 0));
+    try {
+      setTurtleJson(null);
+      const data = await generateTurtleCommands({ imageBase64: processedImage.split(',')[1] });
+      try {
+        const trueData: TurtleJsonType = data;
+        setTurtleJson(JSON.stringify(trueData, null, 0));
+      } catch (error) {
+        console.error(`型が一致しません: ${error}`);
+        setError(`型が一致しません: ${error}`);
+      }
+    } catch (error) {
+      console.error(`エラーが発生しました: ${error}`);
+      setError(`エラーが発生しました: ${error}`);
+    }
     setIsGeneratingJson(false);
   }
 
   return (
     <div className="window-container">
-      <h1 className="window-title">線画抽出アプリ&#040;サーバー版&#041;</h1>
+      <div className="window-title">イラストの線画抽出アプリ&#040;サーバー版&#041;</div>
+      <div>Vercel上でのOpenCVデモ</div>
       <div className="input-section">
         <input
           className="input-file"
@@ -119,7 +122,7 @@ const ImageProcessingApp: React.FC = () => {
           accept="image/*"
           onChange={handleFileChange}
         />
-        <button className="submit-button" onClick={handleSubmit} disabled={loading}>
+        <button className="submit-button" onClick={handleSubmit} disabled={loading || !selectedImage}>
           開始
         </button>
       </div>

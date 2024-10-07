@@ -23,12 +23,7 @@ def process_image():
         kernel = np.ones((3, 3), np.uint8)
         dilated = cv2.dilate(edges, kernel, iterations=0)
 
-        information_json = {
-            "size": [image.shape[1], image.shape[0]],
-        }
-
         response_data = {
-            "information": information_json,
             "dilatedBase64": base64.b64encode(
                 cv2.imencode(".png", dilated)[1]
             ).decode(),
