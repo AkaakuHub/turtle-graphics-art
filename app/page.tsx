@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useRef } from 'react';
 import { TurtleJsonType } from './types';
 import './page.css';
 
@@ -111,15 +111,27 @@ const ImageProcessingApp: React.FC = () => {
     setIsGeneratingJson(false);
   }
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="window-container">
       <div className="window-title">イラストの線画抽出アプリ&#040;サーバー版&#041;</div>
       <div>Vercel上でのOpenCVデモ</div>
       <div className="input-section">
+        <button className="upload-button" onClick={handleUploadClick}>
+          アップロード
+        </button>
         <input
-          className="input-file"
           type="file"
           accept="image/*"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
           onChange={handleFileChange}
         />
         <button className="submit-button" onClick={handleSubmit} disabled={loading || !selectedImage}>
