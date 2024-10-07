@@ -14,6 +14,7 @@ const ImageProcessingApp: React.FC = () => {
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [turtleJson, setTurtleJson] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -21,9 +22,9 @@ const ImageProcessingApp: React.FC = () => {
       setFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result as string); // base64エンコードされた画像
+        setSelectedImage(reader.result as string);
       };
-      reader.readAsDataURL(file); // base64に変換
+      reader.readAsDataURL(file);
     }
   };
 
@@ -31,6 +32,10 @@ const ImageProcessingApp: React.FC = () => {
     if (!selectedImage || !fileName) return;
 
     setLoading(true);
+    setError(null);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const response = await fetch('/api/run', {
         method: 'POST',
@@ -39,19 +44,30 @@ const ImageProcessingApp: React.FC = () => {
         },
         body: JSON.stringify({
           fileName: fileName,
-          imageBase64: selectedImage.split(',')[1], // base64のプレフィックスを削除
+          imageBase64: selectedImage.split(',')[1],
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data: ApiResponse = await response.json();
-        setTurtleJson(JSON.stringify(data.turtle, null, 0)); // turtle JSONを保存
+        setTurtleJson(JSON.stringify(data.turtle, null, 0));
         setProcessedImage(`data:image/png;base64,${data.dilatedBase64}`);
       } else {
         console.error('APIエラー:', response.statusText);
+        setError(`APIエラー:, ${response.statusText}`);
       }
     } catch (error) {
-      console.error('エラーが発生しました:', error);
+    const err = error as Error;
+    if (err.name === 'AbortError') {
+      console.error('タイムアウトエラー: サーバーからの応答がありませんでした。');
+      setError('タイムアウトエラー: サーバーからの応答がありませんでした。');
+    } else {
+      console.error(`エラーが発生しました: ${err.message}`);
+      setError(`エラーが発生しました: ${err.message}`);
+    }
     } finally {
       setLoading(false);
     }
@@ -83,6 +99,7 @@ const ImageProcessingApp: React.FC = () => {
         </button>
       </div>
       {loading && <p className="loading-text">処理中...</p>}
+      {error && <p className="error-text">{error}</p>}
       {selectedImage && (
         <div className="image-section">
           <h2 className="section-title">選択した画像:</h2>
