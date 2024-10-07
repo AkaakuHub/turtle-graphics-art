@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState, ChangeEvent } from 'react';
+import { TurtleJsonType } from './types';
 import './page.css';
 
+import generateTurtleCommands from '@/lib/generateTurtleCommands';
+
 interface ApiResponse {
-  turtle: string;
+  information: [number, number];
   dilatedBase64: string;
 }
 
@@ -15,6 +18,10 @@ const ImageProcessingApp: React.FC = () => {
   const [turtleJson, setTurtleJson] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [isGeneratingJson, setIsGeneratingJson] = useState<boolean>(false);
+  const [width, setWidth] = useState<number>(0);
+  const [height, setHeight] = useState<number>(0);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -33,6 +40,7 @@ const ImageProcessingApp: React.FC = () => {
 
     setLoading(true);
     setError(null);
+    setProcessedImage(null);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -43,7 +51,6 @@ const ImageProcessingApp: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fileName: fileName,
           imageBase64: selectedImage.split(',')[1],
         }),
         signal: controller.signal,
@@ -53,21 +60,26 @@ const ImageProcessingApp: React.FC = () => {
 
       if (response.ok) {
         const data: ApiResponse = await response.json();
-        setTurtleJson(JSON.stringify(data.turtle, null, 0));
-        setProcessedImage(`data:image/png;base64,${data.dilatedBase64}`);
+        const information = data.information;
+        const width = information[0];
+        const height = information[1];
+        setWidth(width);
+        setHeight(height);
+        const dilatedBase64 = data.dilatedBase64;
+        setProcessedImage(`data:image/png;base64,${dilatedBase64}`);
       } else {
         console.error('APIエラー:', response.statusText);
         setError(`APIエラー:, ${response.statusText}`);
       }
     } catch (error) {
-    const err = error as Error;
-    if (err.name === 'AbortError') {
-      console.error('タイムアウトエラー: サーバーからの応答がありませんでした。');
-      setError('タイムアウトエラー: サーバーからの応答がありませんでした。');
-    } else {
-      console.error(`エラーが発生しました: ${err.message}`);
-      setError(`エラーが発生しました: ${err.message}`);
-    }
+      const err = error as Error;
+      if (err.name === 'AbortError') {
+        console.error('タイムアウトエラー: サーバーからの応答がありませんでした。');
+        setError('タイムアウトエラー: サーバーからの応答がありませんでした。');
+      } else {
+        console.error(`エラーが発生しました: ${err.message}`);
+        setError(`エラーが発生しました: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,6 +95,19 @@ const ImageProcessingApp: React.FC = () => {
       link.click();
     }
   };
+
+  const handleGenerateTurtleJson = async () => {
+    if (!processedImage) return;
+    setTurtleJson(null);
+    setIsGeneratingJson(true);
+    const data = await generateTurtleCommands({ imageBase64: processedImage.split(',')[1] });
+    const turtleJson: TurtleJsonType = {
+      size: [width, height],
+      data,
+    };
+    setTurtleJson(JSON.stringify(turtleJson, null, 0));
+    setIsGeneratingJson(false);
+  }
 
   return (
     <div className="window-container">
@@ -112,15 +137,26 @@ const ImageProcessingApp: React.FC = () => {
           <img className="image-display" src={processedImage} alt="Processed" />
         </div>
       )}
-      {/* {turtleJson && (
+      {
+        processedImage && (
+          <div>
+            <button className='submit-button'
+              disabled={isGeneratingJson}
+              onClick={async () => {
+                await handleGenerateTurtleJson();
+              }}>jsonを生成&#040;ローカル&#041;</button>
+          </div>
+        )
+      }
+      {turtleJson && (
         <div className="download-section">
           <button className="download-button" onClick={handleDownload}>
             turtle.jsonをダウンロード
           </button>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
 
-export default ImageProcessingApp;  
+export default ImageProcessingApp;
