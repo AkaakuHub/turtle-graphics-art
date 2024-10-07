@@ -1,6 +1,8 @@
 type Position = [number, number];
 type Island = Position[];
 
+let imageData: ImageData;
+
 import { TurtleCommand, TurtleCommands, TurtleJsonType } from '../app/types';
 
 function decodeBase64Image(imageBase64: string): Promise<ImageData> {
@@ -35,7 +37,7 @@ function decodeBase64Image(imageBase64: string): Promise<ImageData> {
 }
 
 
-function findIslands(imageData: ImageData): Island[] {
+function findIslands(): Island[] {
   const { width, height, data } = imageData;
   const visited: boolean[][] = Array.from({ length: height }, () => Array(width).fill(false));
   const islands: Island[] = [];
@@ -56,7 +58,7 @@ function findIslands(imageData: ImageData): Island[] {
         const nx = x + dx;
         const ny = y + dy;
 
-        if (nx >= 0 && ny >= 0 && nx < width && ny < height && data[(ny * width + nx) * 4] === 255 && !visited[ny][nx]) {
+        if (nx >= 0 && ny >= 0 && nx < width && ny < height && data[(ny * width + nx) * 4] === 0 && !visited[ny][nx]) {
           queue.push([nx, ny]);
         }
       }
@@ -66,7 +68,7 @@ function findIslands(imageData: ImageData): Island[] {
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (data[(y * width + x) * 4] === 255 && !visited[y][x]) {
+      if (data[(y * width + x) * 4] === 0 && !visited[y][x]) {
         const island = bfs(x, y);
         islands.push(island);
       }
@@ -134,7 +136,19 @@ function generateZigzagCommands(start: Position, end: Position, currentAngle: nu
     currentAngle = direction;
   }
 
+  // TODO
+  // ギザギザ移動を解消する
+  // m1, r90, m1, l90 => r45, m1, l45
+  // m1, l90, m1, r90 => l45, m1, r45
+  // 角度はintなので22.5などはダメ
+
   return [commands, currentAngle];
+}
+
+function isWhitePixel(pos: Position): boolean {
+  const [x, y] = pos;
+  const index = (y * imageData.width + x) * 4;
+  return imageData.data[index] === 0 && imageData.data[index + 1] === 0 && imageData.data[index + 2] === 0;
 }
 
 function generateCommands(islands: Island[]): TurtleCommands {
@@ -143,22 +157,29 @@ function generateCommands(islands: Island[]): TurtleCommands {
   let currentAngle = 0;
 
   while (islands.length > 0) {
-    const nearestIsland = findNearestIsland(currentPos, islands);
-    if (!nearestIsland) break;
-    islands.splice(islands.indexOf(nearestIsland), 1);
+      const nearestIsland = findNearestIsland(currentPos, islands);
+      if (!nearestIsland) break;
+      islands.splice(islands.indexOf(nearestIsland), 1);
 
-    commands.push('u');
-    let [zigzagCommands, newAngle] = generateZigzagCommands(currentPos, nearestIsland[0], currentAngle);
-    commands.push(...zigzagCommands);
-
-    commands.push('d');
-    for (let i = 1; i < nearestIsland.length; i++) {
-      [zigzagCommands, newAngle] = generateZigzagCommands(nearestIsland[i - 1], nearestIsland[i], newAngle);
+      commands.push('u');
+      let [zigzagCommands, newAngle] = generateZigzagCommands(currentPos, nearestIsland[0], currentAngle);
       commands.push(...zigzagCommands);
-    }
 
-    currentPos = nearestIsland[nearestIsland.length - 1];
-    currentAngle = newAngle;
+      // ペンを下ろす前に確認
+      if (isWhitePixel(nearestIsland[0])) {
+          commands.push('d');
+      }
+
+      for (let i = 1; i < nearestIsland.length; i++) {
+          [zigzagCommands, newAngle] = generateZigzagCommands(nearestIsland[i - 1], nearestIsland[i], newAngle);
+
+          if (isWhitePixel(nearestIsland[i])) {
+              commands.push(...zigzagCommands);
+          }
+      }
+
+      currentPos = nearestIsland[nearestIsland.length - 1];
+      currentAngle = newAngle;
   }
 
   return commands;
@@ -169,8 +190,8 @@ interface GenerateTurtleCommandsProps {
 }
 
 export default async function generateTurtleCommands({ imageBase64 }: GenerateTurtleCommandsProps): Promise<TurtleJsonType> {
-  const imageData = await decodeBase64Image(imageBase64);
-  const islands = findIslands(imageData);
+  imageData = await decodeBase64Image(imageBase64);
+  const islands = findIslands();
   const commands = generateCommands(islands);
   const width = imageData.width;
   const height = imageData.height;

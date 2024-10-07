@@ -10,7 +10,7 @@ app = Flask(__name__)
 def process_image():
     try:
         data = request.get_json()
-        image_base64 = data.get("imageBase64")
+        image_base64 = data.get("image")
 
         image_data = base64.b64decode(image_base64)
         np_arr = np.frombuffer(image_data, np.uint8)
@@ -22,10 +22,11 @@ def process_image():
         edges = cv2.Canny(blurred, 50, 150)
         kernel = np.ones((3, 3), np.uint8)
         dilated = cv2.dilate(edges, kernel, iterations=0)
+        turned = cv2.bitwise_not(dilated)
 
         response_data = {
-            "dilatedBase64": base64.b64encode(
-                cv2.imencode(".png", dilated)[1]
+            "image": base64.b64encode(
+                cv2.imencode(".png", turned)[1]
             ).decode(),
         }
 
