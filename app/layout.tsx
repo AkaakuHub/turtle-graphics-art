@@ -1,3 +1,5 @@
+import "./global.css";
+
 export const metadata = {
   title: '線画抽出アプリ',
   description: '線画抽出アプリ',

@@ -3,7 +3,6 @@
 import React, { useState, ChangeEvent, useRef } from 'react';
 import { useSearchParams } from 'next/navigation'
 import { TurtleJsonType } from './types';
-import './page.css';
 
 import generateTurtleCommands from '@/lib/generateTurtleCommands';
 
