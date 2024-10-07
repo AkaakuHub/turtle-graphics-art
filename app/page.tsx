@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, ChangeEvent, useRef } from 'react';
+import { useSearchParams } from 'next/navigation'
 import { TurtleJsonType } from './types';
 import './page.css';
 
@@ -11,6 +12,8 @@ interface ApiResponse {
 }
 
 const ImageProcessingApp: React.FC = () => {
+  const searchParams = useSearchParams();
+  const isTurtle = searchParams.has('turtle');
   const [fileName, setFileName] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
@@ -156,18 +159,16 @@ const ImageProcessingApp: React.FC = () => {
             <img className="image-display" src={processedImage} alt="Processed" />
           </div>
         )}
-        {
-          processedImage && (
-            <div>
-              <button className='submit-button'
-                disabled={isGeneratingJson}
-                onClick={async () => {
-                  await handleGenerateTurtleJson();
-                }}>jsonを生成&#040;ローカル&#041;</button>
-            </div>
-          )
-        }
-        {turtleJson && (
+        {isTurtle && processedImage && (
+          <div>
+            <button className='submit-button'
+              disabled={isGeneratingJson}
+              onClick={async () => {
+                await handleGenerateTurtleJson();
+              }}>jsonを生成&#040;ローカル&#041;</button>
+          </div>
+        )}
+        {isTurtle && turtleJson && (
           <div className="download-section">
             <button className="download-button" onClick={handleDownload}>
               turtle.jsonをダウンロード

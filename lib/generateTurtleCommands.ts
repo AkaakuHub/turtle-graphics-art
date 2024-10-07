@@ -142,6 +142,14 @@ function generateZigzagCommands(start: Position, end: Position, currentAngle: nu
   // m1, l90, m1, r90 => l45, m1, r45
   // 角度はintなので22.5などはダメ
 
+  // m1が連続してるのもヤバい
+  // m1, m1, m1 => m3
+  for (let i = 0; i < commands.length - 1; i++) {
+    if (commands[i] === 'm1' && commands[i + 1] === 'm1') {
+      commands.splice(i, 2, 'm2');
+    }
+  }
+
   return [commands, currentAngle];
 }
 
