@@ -7,6 +7,16 @@
   background: transparent;
 }
 
+body,
+html{
+  margin: 0;
+  padding: 0;
+}
+
+div{
+  user-select: none;
+}
+
 .window-wrapper{
   display: flex;
   flex-direction: column;
@@ -96,8 +106,16 @@ button:disabled {
   color: white;
 }
 
-.github-link{
-  color: #0078d7;
-  text-decoration: none;
-  margin: 10px 0;
+.footer-links {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 30px 0;
+
+  a {
+    color: #0078d7;
+    text-decoration: none;
+  }
 }

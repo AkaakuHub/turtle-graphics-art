@@ -1,18 +1,21 @@
 "use client";
 
 import React, { useState, ChangeEvent, useRef } from 'react';
-import { useSearchParams } from 'next/navigation'
-import { TurtleJsonType } from './types';
+import { TurtleJsonType } from '@/types';
 
 import generateTurtleCommands from '@/lib/generateTurtleCommands';
+import { RunMode } from '@/types';
 
 interface ApiResponse {
   image: string;
 }
 
-const ImageProcessingApp: React.FC = () => {
-  const searchParams = useSearchParams();
-  const isTurtle = searchParams.has('turtle');
+interface MainUIProps {
+  isTurtle: boolean;
+  runMode: RunMode;
+}
+
+export default function MainUI({ isTurtle, runMode }: MainUIProps) {
   const [fileName, setFileName] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
@@ -22,7 +25,6 @@ const ImageProcessingApp: React.FC = () => {
 
   const [isGeneratingJson, setIsGeneratingJson] = useState<boolean>(false);
 
-  const NEXT_PUBLIC_GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL || '';
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,7 +68,7 @@ const ImageProcessingApp: React.FC = () => {
         setProcessedImage(`data:image/png;base64,${dilatedBase64}`);
       } else {
         console.error('APIエラー:', response.statusText);
-        setError(`APIエラー:, ${response.statusText}`);
+        setError(`APIエラー: ${response.statusText}`);
       }
     } catch (error) {
       const err = error as Error;
@@ -123,63 +125,56 @@ const ImageProcessingApp: React.FC = () => {
       fileInputRef.current.click();
     }
   };
-
   return (
-    <div className='window-wrapper'>
-      <div className="window-container">
-        <div className="window-title">イラストの線画抽出アプリ</div>
-        <div>Vercel Serverless Function上でのOpenCVデモ</div>
-        <div className="input-section">
-          <button className="upload-button" onClick={handleUploadClick}>
-            アップロード
-          </button>
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-          <button className="submit-button" onClick={handleSubmit} disabled={loading || !selectedImage}>
-            開始
+
+    <div className="window-container">
+      <div className="window-title">イラストの線画抽出アプリ</div>
+      <div>Vercel Serverless Function上でのOpenCVデモ</div>
+      <div className="input-section">
+        <button className="upload-button" onClick={handleUploadClick}>
+          アップロード
+        </button>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
+        <button className="submit-button" onClick={handleSubmit} disabled={loading || !selectedImage}>
+          開始
+        </button>
+      </div>
+      {loading && <p className="loading-text">処理中...</p>}
+      {error && <p className="error-text">{error}</p>}
+      {selectedImage && (
+        <div className="image-section">
+          <h2 className="section-title">選択した画像:</h2>
+          <img className="image-display" src={selectedImage} alt="Selected" />
+        </div>
+      )}
+      {processedImage && (
+        <div className="image-section">
+          <h2 className="section-title">処理された画像:</h2>
+          <img className="image-display" src={processedImage} alt="Processed" />
+        </div>
+      )}
+      {isTurtle && processedImage && (
+        <div>
+          <button className='submit-button'
+            disabled={isGeneratingJson}
+            onClick={async () => {
+              await handleGenerateTurtleJson();
+            }}>jsonを生成&#040;ローカル&#041;</button>
+        </div>
+      )}
+      {isTurtle && turtleJson && (
+        <div className="download-section">
+          <button className="download-button" onClick={handleDownload}>
+            turtle.jsonをダウンロード
           </button>
         </div>
-        {loading && <p className="loading-text">処理中...</p>}
-        {error && <p className="error-text">{error}</p>}
-        {selectedImage && (
-          <div className="image-section">
-            <h2 className="section-title">選択した画像:</h2>
-            <img className="image-display" src={selectedImage} alt="Selected" />
-          </div>
-        )}
-        {processedImage && (
-          <div className="image-section">
-            <h2 className="section-title">処理された画像:</h2>
-            <img className="image-display" src={processedImage} alt="Processed" />
-          </div>
-        )}
-        {isTurtle && processedImage && (
-          <div>
-            <button className='submit-button'
-              disabled={isGeneratingJson}
-              onClick={async () => {
-                await handleGenerateTurtleJson();
-              }}>jsonを生成&#040;ローカル&#041;</button>
-          </div>
-        )}
-        {isTurtle && turtleJson && (
-          <div className="download-section">
-            <button className="download-button" onClick={handleDownload}>
-              turtle.jsonをダウンロード
-            </button>
-          </div>
-        )}
-      </div>
-      <a className="github-link" href={NEXT_PUBLIC_GITHUB_URL} target="_blank" rel="noopener noreferrer">
-        GitHub
-      </a>
+      )}
     </div>
-  );
-};
-
-export default ImageProcessingApp;
+  )
+}

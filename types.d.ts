@@ -6,3 +6,5 @@ export interface TurtleJsonType {
   size: [number, number];
   data: TurtleJson;
 }
+
+export type RunMode = "client" | "server";

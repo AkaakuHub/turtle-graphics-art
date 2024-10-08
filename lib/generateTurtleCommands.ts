@@ -3,7 +3,7 @@ type Island = Position[];
 
 let imageData: ImageData;
 
-import { TurtleCommand, TurtleCommands, TurtleJsonType } from '../app/types';
+import { TurtleCommand, TurtleCommands, TurtleJsonType } from '../types';
 
 function decodeBase64Image(imageBase64: string): Promise<ImageData> {
   return new Promise((resolve, reject) => {
