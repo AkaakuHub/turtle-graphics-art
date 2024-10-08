@@ -1,5 +1,7 @@
 "use client";
 
+import { RunMode } from '@/types';
+
 interface FooterProps {
   isTurtle: boolean;
 }
@@ -12,6 +14,20 @@ export default function Footer({ isTurtle }: FooterProps) {
       <a href={NEXT_PUBLIC_GITHUB_URL} target="_blank" rel="noopener noreferrer">
         GitHub
       </a>
+      {/* <span>
+        ・
+      </span> */}
+      {/* {
+        runMode === "server" ? (
+          <a href="/">
+            戻る
+          </a>
+        ) : (
+          <a href="/another">
+            サーバー版
+          </a>
+        )
+      } */}
       <span>
         ・
       </span>

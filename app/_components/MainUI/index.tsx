@@ -25,7 +25,6 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
 
   const [isGeneratingJson, setIsGeneratingJson] = useState<boolean>(false);
 
-
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -128,8 +127,23 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
   return (
 
     <div className="window-container">
-      <div className="window-title">イラストの線画抽出アプリ</div>
-      <div>Vercel Serverless Function上でのOpenCVデモ</div>
+      <div className="window-title">
+        イラストの線画抽出アプリ
+        {
+          runMode === 'server' && (
+            <>&#040;サーバー&#041;</>
+          )
+        }
+      </div>
+      <div>
+        {
+          runMode === 'server' ? (
+            <>Vercel Serverless Function上でのOpenCVデモ</>
+          ) : (
+            <>処理はすべてローカルで行われます</>
+          )
+        }
+      </div>
       <div className="input-section">
         <button className="upload-button" onClick={handleUploadClick}>
           アップロード

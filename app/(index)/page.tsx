@@ -11,7 +11,7 @@ const ImageProcessingApp: React.FC = () => {
 
   return (
     <div className='window-wrapper'>
-      <MainUI isTurtle={isTurtle} runMode={"client"} />
+      <MainUI isTurtle={isTurtle} runMode={"server"} />
       <Footer isTurtle={isTurtle} />
     </div>
   );

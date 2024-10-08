@@ -110,7 +110,6 @@ button:disabled {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
   gap: 5px;
   margin: 10px 0 30px 0;
 
