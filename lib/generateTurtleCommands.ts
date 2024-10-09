@@ -2,6 +2,7 @@ type Position = [number, number];
 type Island = Position[];
 
 let imageData: ImageData;
+let blackPixels: Position[] = [];
 
 import { TurtleCommand, TurtleCommands, TurtleJsonType } from '../types';
 
@@ -36,6 +37,19 @@ function decodeBase64Image(imageBase64: string): Promise<ImageData> {
   });
 }
 
+function findBlackPixels(): void {
+  // imageDataには、RGBAの順でデータがはいってる
+  // そこから、全部のピクセルを調べて、黒いピクセルの座標を調べて、
+  // blackPixelsに入れる
+  const { width, height, data } = imageData;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4] === 0) {
+        blackPixels.push([x, y]);
+      }
+    }
+  }
+}
 
 function findIslands(): Island[] {
   const { width, height, data } = imageData;
@@ -76,7 +90,28 @@ function findIslands(): Island[] {
       }
     }
   }
-  return islands;
+
+  // 隣接したピクセルのみで島を構成する
+  // なので、islandの中で、必ずインデックス0から順番に見ていったとき、
+  // 隣接するようにして、隣接していなかったらislandを分割する
+  // ただし、失われるピクセルがないようにお願い
+
+  let newIslands: Island[] = [];
+  for (let i = 0; i < islands.length; i++) {
+    let island = islands[i];
+    let newIsland: Island = [island[0]];
+    for (let j = 1; j < island.length; j++) {
+      if (Math.abs(island[j - 1][0] - island[j][0]) > 1 || Math.abs(island[j - 1][1] - island[j][1]) > 1) {
+        newIslands.push(newIsland);
+        newIsland = [island[j]];
+      } else {
+        newIsland.push(island[j]);
+      }
+    }
+    newIslands.push(newIsland);
+  }
+  return newIslands;
+  // return islands;
 }
 
 function calculateDistance(p1: Position, p2: Position): number {
@@ -152,34 +187,50 @@ function generateCommands(islands: Island[]): TurtleCommands {
   const commands: TurtleCommand[] = [];
   let currentPos: Position = [0, 0];
   let currentAngle = 0;
-  // commands.push('u');
+  // let isNextIsSpecial = false;
 
   while (islands.length > 0) {
     const nearestIsland = findNearestIsland(currentPos, islands);
     if (!nearestIsland) break;
     islands.splice(islands.indexOf(nearestIsland), 1);
 
-    commands.push('u');
-    let [route, newAngle] = generateRoute(currentPos, nearestIsland[0], currentAngle);
-    commands.push(...route);
+    let route: TurtleCommand[], newAngle: number;
+    [route, newAngle] = generateRoute(currentPos, nearestIsland[0], currentAngle);
     // え、こっちにも問題ないの
-
     // ペンを下ろす前に確認
     // if (isBlackPixel(nearestIsland[0])) {
     //   commands.push('d');
     // }
-    commands.push('d');
-    for (let i = 1; i < nearestIsland.length; i++) {
-      [route, newAngle] = generateRoute(nearestIsland[i - 1], nearestIsland[i], newAngle);
-      // ここが絶対問題 2024 10/09 20:41
-
-      // if (isBlackPixel(nearestIsland[i])) {
-      //   commands.push(...route);
-      // }
+    // 島の長さが1のときも場合分け
+    // if (isNextIsSpecial) {
+    //   commands.push('d');
+    //   isNextIsSpecial = false;
+    // }
+    if (nearestIsland.length === 1) {
+      // 最後のm1を一旦除去すれば、ペンで書ける
+      const lastMove = route.pop();
       commands.push(...route);
+      commands.push('d');
+      if (lastMove !== undefined) {
+        commands.push(lastMove);
+      }
+      // console.log(`${currentPos} => ${nearestIsland[0]}`);
+      // [route, newAngle] = generateRoute(currentPos, nearestIsland[0], newAngle);
+      // currentPos = nearestIsland[0];
+    } else {
+      commands.push(...route);
+      commands.push('d');
+      for (let i = 1; i < nearestIsland.length; i++) {
+        [route, newAngle] = generateRoute(nearestIsland[i - 1], nearestIsland[i], newAngle);
+        // nearestIsland[i - 1], nearestIsland[i]が縦または隣あってなかったら、エラーとしてalert
+        // if (Math.abs(nearestIsland[i - 1][0] - nearestIsland[i][0]) > 1 || Math.abs(nearestIsland[i - 1][1] - nearestIsland[i][1]) > 1) {
+        //   console.error(`隣接していない: ${nearestIsland[i - 1]}と${nearestIsland[i]}`);
+        // }
+        // ここが絶対問題 2024 10/09 20:41
+        commands.push(...route);
+      }
     }
-    // commands.push('u');
-
+    commands.push('u');
     currentPos = nearestIsland[nearestIsland.length - 1];
     currentAngle = newAngle;
   }
@@ -214,6 +265,7 @@ interface GenerateTurtleCommandsProps {
 
 export default async function generateTurtleCommands({ imageBase64 }: GenerateTurtleCommandsProps): Promise<TurtleJsonType> {
   imageData = await decodeBase64Image(imageBase64);
+  findBlackPixels();
   const islands = findIslands();
   const commands = generateCommands(islands);
   const width = imageData.width;
