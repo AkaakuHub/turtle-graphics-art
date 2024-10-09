@@ -34,7 +34,7 @@ export default function Footer({ isTurtle }: FooterProps) {
       {
         isTurtle ? (
           <a href={window.location.pathname}>
-            🏚️
+            🏠️
           </a>
         ) : (
           <a href={`${window.location.pathname}?turtle`}>

@@ -136,20 +136,6 @@ function generateZigzagCommands(start: Position, end: Position, currentAngle: nu
     currentAngle = direction;
   }
 
-  // TODO
-  // ギザギザ移動を解消する
-  // m1, r90, m1, l90 => r45, m1, l45
-  // m1, l90, m1, r90 => l45, m1, r45
-  // 角度はintなので22.5などはダメ
-
-  // m1が連続してるのもヤバい
-  // m1, m1, m1 => m3
-  for (let i = 0; i < commands.length - 1; i++) {
-    if (commands[i] === 'm1' && commands[i + 1] === 'm1') {
-      commands.splice(i, 2, 'm2');
-    }
-  }
-
   return [commands, currentAngle];
 }
 
@@ -165,30 +151,54 @@ function generateCommands(islands: Island[]): TurtleCommands {
   let currentAngle = 0;
 
   while (islands.length > 0) {
-      const nearestIsland = findNearestIsland(currentPos, islands);
-      if (!nearestIsland) break;
-      islands.splice(islands.indexOf(nearestIsland), 1);
+    const nearestIsland = findNearestIsland(currentPos, islands);
+    if (!nearestIsland) break;
+    islands.splice(islands.indexOf(nearestIsland), 1);
 
-      commands.push('u');
-      let [zigzagCommands, newAngle] = generateZigzagCommands(currentPos, nearestIsland[0], currentAngle);
-      commands.push(...zigzagCommands);
+    // commands.push('u');
+    let [zigzagCommands, newAngle] = generateZigzagCommands(currentPos, nearestIsland[0], currentAngle);
+    commands.push(...zigzagCommands);
 
-      // ペンを下ろす前に確認
-      if (isWhitePixel(nearestIsland[0])) {
-          commands.push('d');
+    // ペンを下ろす前に確認
+    // if (isWhitePixel(nearestIsland[0])) {
+    //   commands.push('d');
+    // }
+    // commands.push('d');
+    for (let i = 1; i < nearestIsland.length; i++) {
+      [zigzagCommands, newAngle] = generateZigzagCommands(nearestIsland[i - 1], nearestIsland[i], newAngle);
+
+      if (isWhitePixel(nearestIsland[i])) {
+        commands.push('d');
+        commands.push(...zigzagCommands);
+        commands.push('u');
       }
+    }
+    // commands.push('u');
 
-      for (let i = 1; i < nearestIsland.length; i++) {
-          [zigzagCommands, newAngle] = generateZigzagCommands(nearestIsland[i - 1], nearestIsland[i], newAngle);
-
-          if (isWhitePixel(nearestIsland[i])) {
-              commands.push(...zigzagCommands);
-          }
-      }
-
-      currentPos = nearestIsland[nearestIsland.length - 1];
-      currentAngle = newAngle;
+    currentPos = nearestIsland[nearestIsland.length - 1];
+    currentAngle = newAngle;
   }
+
+  // やっぱ1ずつのほうが見栄えがいい
+  // // m1 の連続をまとめる処理
+  // const optimizedCommands: TurtleCommand[] = [];
+  // let moveCount = 0;
+
+  // for (let i = 0; i < commands.length; i++) {
+  //   if (commands[i] === 'm1') {
+  //     moveCount++;
+  //   } else {
+  //     if (moveCount > 0) {
+  //       optimizedCommands.push(`m${moveCount}`);
+  //       moveCount = 0;
+  //     }
+  //     optimizedCommands.push(commands[i]);
+  //   }
+  // }
+
+  // if (moveCount > 0) {
+  //   optimizedCommands.push(`m${moveCount}`);
+  // }
 
   return commands;
 }
