@@ -66,6 +66,8 @@ function findIslands(): Island[] {
     return island;
   };
 
+  // imageDataには、RGBAの順でデータがはいってる
+  // Rだけ確かめればいい
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (data[(y * width + x) * 4] === 0 && !visited[y][x]) {
@@ -74,7 +76,6 @@ function findIslands(): Island[] {
       }
     }
   }
-
   return islands;
 }
 
@@ -105,7 +106,7 @@ function getDirection(dx: number, dy: number): number {
   }
 }
 
-function generateZigzagCommands(start: Position, end: Position, currentAngle: number): [TurtleCommand[], number] {
+function generateRoute(start: Position, end: Position, currentAngle: number): [TurtleCommand[], number] {
   const commands: TurtleCommand[] = [];
   let [x1, y1] = start;
   const [x2, y2] = end;
@@ -139,39 +140,43 @@ function generateZigzagCommands(start: Position, end: Position, currentAngle: nu
   return [commands, currentAngle];
 }
 
-function isWhitePixel(pos: Position): boolean {
-  const [x, y] = pos;
-  const index = (y * imageData.width + x) * 4;
-  return imageData.data[index] === 0 && imageData.data[index + 1] === 0 && imageData.data[index + 2] === 0;
-}
+// function isBlackPixel(pos: Position): boolean {
+//   const [x, y] = pos;
+//   const index = (y * imageData.width + x) * 4;
+//   return imageData.data[index] === 0 && imageData.data[index + 1] === 0 && imageData.data[index + 2] === 0;
+// }
+
+
 
 function generateCommands(islands: Island[]): TurtleCommands {
   const commands: TurtleCommand[] = [];
   let currentPos: Position = [0, 0];
   let currentAngle = 0;
+  // commands.push('u');
 
   while (islands.length > 0) {
     const nearestIsland = findNearestIsland(currentPos, islands);
     if (!nearestIsland) break;
     islands.splice(islands.indexOf(nearestIsland), 1);
 
-    // commands.push('u');
-    let [zigzagCommands, newAngle] = generateZigzagCommands(currentPos, nearestIsland[0], currentAngle);
-    commands.push(...zigzagCommands);
+    commands.push('u');
+    let [route, newAngle] = generateRoute(currentPos, nearestIsland[0], currentAngle);
+    commands.push(...route);
+    // え、こっちにも問題ないの
 
     // ペンを下ろす前に確認
-    // if (isWhitePixel(nearestIsland[0])) {
+    // if (isBlackPixel(nearestIsland[0])) {
     //   commands.push('d');
     // }
-    // commands.push('d');
+    commands.push('d');
     for (let i = 1; i < nearestIsland.length; i++) {
-      [zigzagCommands, newAngle] = generateZigzagCommands(nearestIsland[i - 1], nearestIsland[i], newAngle);
+      [route, newAngle] = generateRoute(nearestIsland[i - 1], nearestIsland[i], newAngle);
+      // ここが絶対問題 2024 10/09 20:41
 
-      if (isWhitePixel(nearestIsland[i])) {
-        commands.push('d');
-        commands.push(...zigzagCommands);
-        commands.push('u');
-      }
+      // if (isBlackPixel(nearestIsland[i])) {
+      //   commands.push(...route);
+      // }
+      commands.push(...route);
     }
     // commands.push('u');
 
