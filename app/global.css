@@ -111,10 +111,14 @@ button:disabled {
   flex-direction: row;
   justify-content: center;
   gap: 5px;
-  margin: 10px 0 30px 0;
+  margin: 10px 0 20px 0;
 
   a {
     color: #0078d7;
     text-decoration: none;
   }
+}
+
+footer {
+  margin: 0 0 30px 0;
 }

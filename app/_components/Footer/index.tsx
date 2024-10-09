@@ -8,7 +8,7 @@ export default function Footer({ isTurtle }: FooterProps) {
   const NEXT_PUBLIC_GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL || '';
   const hrefURLs = [window.location.pathname, `${window.location.pathname}?turtle`];
   return (
-    <div>
+    <footer>
       <div className="footer-links">
         <a href={NEXT_PUBLIC_GITHUB_URL} target="_blank" rel="noopener noreferrer">
           GitHub
@@ -45,6 +45,6 @@ export default function Footer({ isTurtle }: FooterProps) {
       <div>
         Try this API by POST &#123; image: &#091;base64&#093; &#125; to <a href={isTurtle ? hrefURLs[1] : hrefURLs[0]}>/api/run</a>
       </div>
-    </div>
+    </footer>
   )
 }
