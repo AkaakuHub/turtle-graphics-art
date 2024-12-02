@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, ChangeEvent, useRef } from 'react';
-import { TurtleJsonType } from '@/types';
+import React, { useState, ChangeEvent, useRef } from "react";
+import { TurtleJsonType } from "@/types";
 
-import generateTurtleCommands from '@/lib/generateTurtleCommands';
-import { RunMode } from '@/types';
+import generateTurtleCommands from "@/lib/generateTurtleCommands";
+import { RunMode } from "@/types";
+import clsx from "clsx";
+import { BeatLoader } from "react-spinners";
 
 interface ApiResponse {
   image: string;
@@ -16,7 +18,7 @@ interface MainUIProps {
 }
 
 export default function MainUI({ isTurtle, runMode }: MainUIProps) {
-  const [fileName, setFileName] = useState<string>('');
+  const [fileName, setFileName] = useState<string>("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [turtleJson, setTurtleJson] = useState<string | null>(null);
@@ -48,13 +50,13 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
-      const response = await fetch('/api/run', {
-        method: 'POST',
+      const response = await fetch("/api/run", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          image: selectedImage.split(',')[1],
+          image: selectedImage.split(",")[1],
         }),
         signal: controller.signal,
       });
@@ -66,14 +68,14 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
         const dilatedBase64 = data.image;
         setProcessedImage(`data:image/png;base64,${dilatedBase64}`);
       } else {
-        console.error('APIエラー:', response.statusText);
+        console.error("APIエラー:", response.statusText);
         setError(`APIエラー: ${response.statusText}`);
       }
     } catch (error) {
       const err = error as Error;
-      if (err.name === 'AbortError') {
-        console.error('タイムアウトエラー: サーバーからの応答がありませんでした。');
-        setError('タイムアウトエラー: サーバーからの応答がありませんでした。');
+      if (err.name === "AbortError") {
+        console.error("タイムアウトエラー: サーバーからの応答がありませんでした。");
+        setError("タイムアウトエラー: サーバーからの応答がありませんでした。");
       } else {
         console.error(`エラーが発生しました: ${err.message}`);
         setError(`エラーが発生しました: ${err.message}`);
@@ -85,24 +87,24 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
 
   const handleDownload = () => {
     if (turtleJson) {
-      const blob = new Blob([turtleJson], { type: 'application/json' });
+      const blob = new Blob([turtleJson], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'turtle.json';
+      link.download = "turtle.json";
       link.click();
     }
   };
 
   const handleGenerateTurtleJson = async () => {
     if (!processedImage) {
-      setError('画像が処理されていません');
+      setError("画像が処理されていません");
       return;
     }
     setIsGeneratingJson(true);
     try {
       setTurtleJson(null);
-      const data = await generateTurtleCommands({ imageBase64: processedImage.split(',')[1] });
+      const data = await generateTurtleCommands({ imageBase64: processedImage.split(",")[1] });
       try {
         const trueData: TurtleJsonType = data;
         setTurtleJson(JSON.stringify(trueData, null, 0));
@@ -130,14 +132,14 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
       <div className="window-title">
         イラストの線画抽出アプリ
         {
-          runMode === 'server' && (
+          runMode === "server" && (
             <>&#040;サーバー&#041;</>
           )
         }
       </div>
       <div>
         {
-          runMode === 'server' ? (
+          runMode === "server" ? (
             <>Vercel Serverless Function上でのOpenCVデモ</>
           ) : (
             <>処理はすべてローカルで行われます</>
@@ -152,19 +154,28 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
           type="file"
           accept="image/*"
           ref={fileInputRef}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           onChange={handleFileChange}
         />
         <button className="submit-button" onClick={handleSubmit} disabled={loading || !selectedImage}>
           開始
         </button>
       </div>
-      {loading && <p className="loading-text">処理中...</p>}
       {error && <p className="error-text">{error}</p>}
       {selectedImage && (
         <div className="image-section">
           <h2 className="section-title">選択した画像:</h2>
-          <img className="image-display" src={selectedImage} alt="Selected" />
+          <div className="image-wrapper">
+            <img className={clsx("image-display", loading && "loading-cover")} src={selectedImage} alt="Selected" />
+            <BeatLoader
+              color={"#0078d7"}
+              loading={loading}
+              size={20}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+              className="loader-animation"
+            />
+          </div>
         </div>
       )}
       {processedImage && (
@@ -175,7 +186,7 @@ export default function MainUI({ isTurtle, runMode }: MainUIProps) {
       )}
       {isTurtle && processedImage && (
         <div>
-          <button className='submit-button'
+          <button className="submit-button"
             disabled={isGeneratingJson}
             onClick={async () => {
               await handleGenerateTurtleJson();
